@@ -1,11 +1,10 @@
 #include <iostream>
 #include <pthread.h>
-#include <string>
+#include <utility>
 #include <vector>
 #include <unistd.h>
 #include <sstream>
 #include <fstream>
-#include <signal.h>
 #include <algorithm>
 
 using namespace std;
@@ -14,18 +13,18 @@ using namespace std;
 static int whittierBound = 0;
 static int bearValleyBound = 0;
 static int maxNCars;
-static int bearValleyNumCarsCrossed,whittierNumCarsCrossed, currentNumCars, numCarsWaited = 0;
+static int currentNumCars, numCarsWaited = 0;
 static string tunnelStatus = "Whittier";
 static pthread_mutex_t mutex;
 static pthread_cond_t ready = PTHREAD_COND_INITIALIZER;
 
-struct carThread {
+struct carThread { //container to pass arguments to car pthread.
     unsigned travelTime;
     unsigned carNo;
     string bound;
 };
 
-class Cars {
+class Cars { //container to hold inputs in vector.
 private:
     unsigned arrivalTime;
     string bound;
@@ -33,7 +32,7 @@ private:
 public:
     Cars(unsigned _arrivalTime, string _bound, unsigned _travelTime) {
         arrivalTime = _arrivalTime;
-        bound = _bound;
+        bound = std::move(_bound);
         travelTime = _travelTime;
     }
     unsigned getArrivalTime() const { return arrivalTime; }
@@ -42,15 +41,17 @@ public:
 };
 vector<Cars> carsTable;
 
-void *bearValley(void *arg)
+void *bearValley(void *arg) //pthread that uses mutex_locks to protect critical areas while in use,
+                            // and sleeps as the car travels through the tunnel
 {
     pthread_mutex_lock(&mutex);
 
     struct carThread *carInfo;
     carInfo = (struct carThread *) arg;
     cout << "Bear Valley-bound Car # " << carInfo->carNo+1 << " arrives at tunnel." << endl;
-    if (currentNumCars >= maxNCars) {
+    if (currentNumCars >= maxNCars && tunnelStatus == "Bear Valley") { //only increments when tunnel status is the same.
         numCarsWaited++;
+        //cout <<"BAD LOGIC HERE:"<<endl;
     }
     while(tunnelStatus != "Bear Valley" || currentNumCars >= maxNCars) {
         pthread_cond_wait(&ready, &mutex);
@@ -69,14 +70,15 @@ void *bearValley(void *arg)
     pthread_cond_broadcast(&ready);
     pthread_mutex_unlock(&mutex);
 } // car
-void *whittier(void *arg)
+void *whittier(void *arg) //whittier car pthread that does same thing as Bear valley pretty much.
 {
     pthread_mutex_lock(&mutex);
     struct carThread *carInfo;
     carInfo = (struct carThread *) arg;
     cout << "Whitter-bound Car # " << carInfo->carNo+1 << " arrives at tunnel." << endl;
-    if (currentNumCars >= maxNCars) {
+    if (currentNumCars >= maxNCars && tunnelStatus == "Whittier") { //only increments when tunnel status is the same.
         numCarsWaited++;
+        //cout <<"BAD LOGIC HERE:"<<endl;
     }
     while(tunnelStatus != "Whittier" || currentNumCars >= maxNCars) {
         pthread_cond_wait(&ready, &mutex);
@@ -97,7 +99,7 @@ void *whittier(void *arg)
 } // car
 
 void *tunnelThread(void *args) {
-    //tunnel cycles through 4 choices.
+    //tunnel cycles through 4 choices and sleeps five seconds between each.
 
     while(true) {
         if(tunnelStatus == "Whittier") {
@@ -132,23 +134,15 @@ string delWhiteSpaces(string &str)  //function from ddacot of stackoverflow. Rem
 }
 
 
-int main() {
+int main() {  //reads inputs from user, cycles through table created, making pthreads. Ends program when all car threads are done.
     cin >> maxNCars;
     string line;
-    int count = 0;
-//    while (getline (cin, line)) {
-//        if(count == 0)
-//        {
-//            count++;
-//            continue;
-//        }
-//        carsTable.push_back(line);
-//    }
+
     unsigned arrivalTime;
     string bound;
     unsigned travelTime;
     while(cin >> arrivalTime >> bound >> travelTime) {
-        carsTable.push_back(Cars(arrivalTime, bound, travelTime));
+        carsTable.emplace_back(arrivalTime, bound, travelTime);
     }
     pthread_t tunnelTid;
 
@@ -167,7 +161,7 @@ int main() {
 
         td[i].bound = delWhiteSpaces(s); //delWhiteSpces function just in case, but probably not needed.
 
-        sleep(arrivalTime);
+        sleep(carsTable[i].getArrivalTime());
 
         if("WB" == s) {
             whittierBound++;
