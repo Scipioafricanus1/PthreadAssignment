@@ -48,7 +48,7 @@ void *bearValley(void *arg) //pthread that uses mutex_locks to protect critical 
 
     struct carThread *carInfo;
     carInfo = (struct carThread *) arg;
-    cout << "Bear Valley-bound Car # " << carInfo->carNo+1 << " arrives at tunnel." << endl;
+    cout << "Car # " << carInfo->carNo+1 << " going to Bear Valley arrives at tunnel." << endl;
     if (currentNumCars >= maxNCars && tunnelStatus == "Bear Valley") { //only increments when tunnel status is the same.
         numCarsWaited++;
         //cout <<"BAD LOGIC HERE:"<<endl;
@@ -57,7 +57,7 @@ void *bearValley(void *arg) //pthread that uses mutex_locks to protect critical 
         pthread_cond_wait(&ready, &mutex);
     }
 
-    cout << "Bear Valley-bound Car # " << carInfo->carNo+1 << " enters tunnel." << endl;
+    cout << "Car # " << carInfo->carNo+1 << " going to Bear Valleyenters tunnel." << endl;
     currentNumCars++;
 
     pthread_mutex_unlock(&mutex);
@@ -65,7 +65,7 @@ void *bearValley(void *arg) //pthread that uses mutex_locks to protect critical 
     sleep(carInfo->travelTime);
 
     pthread_mutex_lock(&mutex);
-    cout << "Bear Valley-bound Car # " << carInfo->carNo+1 << " leaves tunnel."<< endl;
+    cout << "Car # " << carInfo->carNo+1 << " going to Bear Valley leaves tunnel."<< endl;
     currentNumCars--;
     pthread_cond_broadcast(&ready);
     pthread_mutex_unlock(&mutex);
@@ -75,7 +75,7 @@ void *whittier(void *arg) //whittier car pthread that does same thing as Bear va
     pthread_mutex_lock(&mutex);
     struct carThread *carInfo;
     carInfo = (struct carThread *) arg;
-    cout << "Whitter-bound Car # " << carInfo->carNo+1 << " arrives at tunnel." << endl;
+    cout << "Car # " << carInfo->carNo+1 << " going to Whittier arrives at tunnel." << endl;
     if (currentNumCars >= maxNCars && tunnelStatus == "Whittier") { //only increments when tunnel status is the same.
         numCarsWaited++;
         //cout <<"BAD LOGIC HERE:"<<endl;
@@ -85,14 +85,14 @@ void *whittier(void *arg) //whittier car pthread that does same thing as Bear va
     }
 
 
-    cout << "Whitter-bound Car # " << carInfo->carNo+1 << " enters tunnel." << endl;
+    cout << "Car # " << carInfo->carNo+1 << " going to Whittier enters tunnel." << endl;
     currentNumCars++;
     pthread_mutex_unlock(&mutex);
 
     sleep(carInfo->travelTime);
 
     pthread_mutex_lock(&mutex);
-    cout << "Whittier-bound Car # " << carInfo->carNo+1 << " leaves tunnel."<< endl;
+    cout << "Car # " << carInfo->carNo+1 << " going to Whittier leaves tunnel."<< endl;
     currentNumCars--;
     pthread_cond_broadcast(&ready);
     pthread_mutex_unlock(&mutex);
