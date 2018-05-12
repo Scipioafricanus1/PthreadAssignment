@@ -42,7 +42,7 @@ public:
 vector<Cars> carsTable;
 
 void *bearValley(void *arg) //pthread that uses mutex_locks to protect critical areas while in use,
-                            // and sleeps as the car travels through the tunnel
+// and sleeps as the car travels through the tunnel
 {
     pthread_mutex_lock(&mutex);
 
@@ -51,7 +51,6 @@ void *bearValley(void *arg) //pthread that uses mutex_locks to protect critical 
     cout << "Car # " << carInfo->carNo+1 << " going to Bear Valley arrives at tunnel." << endl;
     if (currentNumCars >= maxNCars && tunnelStatus == "Bear Valley") { //only increments when tunnel status is the same.
         numCarsWaited++;
-        //cout <<"BAD LOGIC HERE:"<<endl;
     }
     while(tunnelStatus != "Bear Valley" || currentNumCars >= maxNCars) {
         pthread_cond_wait(&ready, &mutex);
@@ -103,20 +102,20 @@ void *tunnelThread(void *args) {
 
     while(true) {
         if(tunnelStatus == "Whittier") {
-            cout <<"Whittier-bound traffic only" << endl;
+            printf("Whittier-bound traffic only\n");
             pthread_cond_broadcast(&ready);
             sleep(5);
             tunnelStatus = "No traffic WB";
-            cout << "No traffic allowed" << endl;
+            printf("No traffic allowed\n");
         } else if (tunnelStatus == "No traffic WB") {
             sleep(5);
             tunnelStatus = "Bear Valley";
-            cout << "Bear Valley-bound traffic only" << endl;
+            printf("Bear Valley-bound traffic only\n" );
             pthread_cond_broadcast(&ready);
         } else if (tunnelStatus == "Bear Valley") {
             sleep(5);
             tunnelStatus = "No traffic BV";
-            cout << "No traffic allowed" << endl;
+            printf("Bear Valley-bound traffic only\n");
         } else if(tunnelStatus == "No traffic BV") {
             sleep(5);
             tunnelStatus = "Whittier";
@@ -125,8 +124,8 @@ void *tunnelThread(void *args) {
 
 }
 
-string delWhiteSpaces(string &str)  //function from ddacot of stackoverflow. Removes spaces from string.
-{                                   //Modified it to make it work better for the assignment.
+string delWhiteSpaces(string &str)
+{
     str.erase(remove(str.begin(), str.end(), ' '), str.end());
     str.erase(remove(str.begin(),str.end(), '\n'), str.end());
     str.erase(remove(str.begin(),str.end(),'\t'), str.end());
@@ -159,7 +158,7 @@ int main() {  //reads inputs from user, cycles through table created, making pth
         td[i].travelTime = carsTable[i].getTravelTime();
         string s = carsTable[i].getBound();
 
-        td[i].bound = delWhiteSpaces(s); //delWhiteSpces function just in case, but probably not needed.
+        td[i].bound = delWhiteSpaces(s);
 
         sleep(carsTable[i].getArrivalTime());
 
